@@ -7,7 +7,7 @@ export interface RequestOptions extends HTTPSRequestOptions {
 }
 
 export interface RequestResult {
-  body: Buffer[],
+  chunks: Buffer[],
   request: ClientRequest,
   response: IncomingMessage
 }
@@ -49,7 +49,7 @@ const request = (address: string, options: RequestOptions = {}) => {
           .on('data', (chunk) => chunks.push(chunk))
           .once('end', () => {
             if (response.complete) {
-              resolve({ body: chunks, request: cr, response });
+              resolve({ chunks, request: cr, response });
               return;
             }
             reject(new Error('Incomplete request.'));
