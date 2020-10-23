@@ -12,6 +12,11 @@ export interface RequestResult {
   response: IncomingMessage
 }
 
+/**
+ * Make a request
+ * @arg address Address
+ * @arg options Request options
+ */
 const request = (address: string, options: RequestOptions = {}) => {
   const url = new URL(address);
   const r = (url.protocol === 'http:' ? http : https).request;
@@ -38,6 +43,7 @@ const request = (address: string, options: RequestOptions = {}) => {
             destination = zlib.createInflate;
             break;
           }
+
           case 'gzip': {
             destination = zlib.createGunzip;
             break;
