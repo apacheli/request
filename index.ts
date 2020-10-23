@@ -2,26 +2,25 @@ import http, { ClientRequest, IncomingMessage } from 'http';
 import https, { RequestOptions as HTTPSRequestOptions } from 'https';
 import zlib, { Gunzip, Inflate } from 'zlib';
 
-interface RequestOptions extends HTTPSRequestOptions {
+export interface RequestOptions extends HTTPSRequestOptions {
   body?: Buffer
 }
 
-interface RequestResult {
+export interface RequestResult {
   body: Buffer[],
   request: ClientRequest,
   response: IncomingMessage
 }
 
-const request = (address: string, options?: RequestOptions) => {
+const request = (address: string, options: RequestOptions = {}) => {
   const url = new URL(address);
   const r = (url.protocol === 'https:' ? https : http).request;
 
-  // @ts-ignore: tfw http/https request function overloads suck
   const cr = r(url, options);
-  if (options?.body) {
+  if (options.body) {
     cr.write(options.body);
   }
-  if (options?.timeout) {
+  if (options.timeout) {
     cr.setTimeout(options.timeout);
   }
   cr.end();
