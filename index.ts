@@ -1,20 +1,20 @@
 import http, { ClientRequest, IncomingMessage } from 'http';
 import https, { RequestOptions as HTTPSRequestOptions } from 'https';
-import zlib, { Gunzip, Inflate } from 'zlib';
+import zlib from 'zlib';
 
 export interface RequestOptions extends HTTPSRequestOptions {
-  body?: Buffer
+  body?: string | Buffer
 }
 
 export interface RequestResult {
-  chunks: Buffer[],
+  body: Buffer,
   request: ClientRequest,
   response: IncomingMessage
 }
 
 const request = (address: string, options: RequestOptions = {}) => {
   const url = new URL(address);
-  const r = (url.protocol === 'https:' ? https : http).request;
+  const r = (url.protocol === 'http:' ? http : https).request;
 
   const cr = r(url, options);
   if (options.body) {
@@ -31,25 +31,24 @@ const request = (address: string, options: RequestOptions = {}) => {
       .on('response', (response) => {
         const chunks: Buffer[] = [];
 
-        let stream: IncomingMessage | Inflate | Gunzip = response;
+        let destination;
         switch (response.headers['content-encoding']) {
 
           case 'deflate': {
-            stream = response.pipe(zlib.createInflate());
+            destination = zlib.createInflate;
             break;
           }
-
           case 'gzip': {
-            stream = response.pipe(zlib.createGunzip());
+            destination = zlib.createGunzip;
             break;
           }
         }
 
-        stream
+        (destination ? response.pipe(destination()) : response)
           .on('data', (chunk) => chunks.push(chunk))
           .once('end', () => {
             if (response.complete) {
-              resolve({ chunks, request: cr, response });
+              resolve({ body: Buffer.concat(chunks), request: cr, response });
               return;
             }
             reject(new Error('Incomplete request.'));
