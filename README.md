@@ -29,14 +29,13 @@ const fields = [
   }
 ];
 
-const { boundary, chunks } = multipart(fields);
+const multipartResult = multipart(fields);
 
 request('https://discord.com/api/v8/channels/761420467402702879/messages', {
+  ...multipartResult,
   headers: {
-    'Content-Type': `multipart/form-data; boundary="${boundary}"`,
+    ...multipartResult.headers,
     Authorization: 'Bot <TOKEN>'
   },
-  body: chunks,
-  method: 'POST'
 });
 ```

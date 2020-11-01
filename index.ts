@@ -82,7 +82,7 @@ export const request = (address: string, options: RequestOptions = {}) => {
  * Create multipart chunks
  * @arg fields Fields
  */
-export const multipart = (fields: Field[]) => {
+export const multipart = (fields: Field[]): RequestOptions => {
   const boundary = Date.now();
   const chunks = [];
 
@@ -95,5 +95,11 @@ export const multipart = (fields: Field[]) => {
   }
   chunks.push(`\n--${boundary}--`);
 
-  return { boundary, chunks };
+  return {
+    headers: {
+      'Content-Type': `multipart/form-data; boundary="${boundary}"`,
+    },
+    body: chunks,
+    method: 'POST'
+  };
 };
