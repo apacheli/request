@@ -2,8 +2,14 @@ import http, { ClientRequest, IncomingMessage } from 'http';
 import https, { RequestOptions as HTTPSRequestOptions } from 'https';
 import zlib from 'zlib';
 
+export interface Field {
+  name: string,
+  value: string | Buffer,
+  filename?: string
+}
+
 export interface RequestOptions extends HTTPSRequestOptions {
-  body?: string | Buffer
+  body?: | string | Buffer | (string | Buffer)[]
 }
 
 export interface RequestResult {
@@ -17,12 +23,17 @@ export interface RequestResult {
  * @arg address Address
  * @arg options Request options
  */
-const request = (address: string, options: RequestOptions = {}) => {
+export const request = (address: string, options: RequestOptions = {}) => {
   const url = new URL(address);
   const r = (url.protocol === 'http:' ? http : https).request;
 
   const cr = r(url, options);
   if (options.body) {
+    if (options.body instanceof Array) {
+      for (const chunk of options.body) {
+        cr.write(chunk);
+      }
+    }
     cr.write(options.body);
   }
   if (options.timeout) {
@@ -65,4 +76,22 @@ const request = (address: string, options: RequestOptions = {}) => {
   });
 };
 
-export default request;
+/**
+ * Create multipart chunks
+ * @arg fields Fields
+ */
+export const multipart = (fields: Field[]) => {
+  const boundary = Date.now();
+  const chunks = [];
+
+  for (const field of fields) {
+    let form = `Content-Disposition: form-data; name="${field.name}"`;
+    if (field.filename) {
+      form += `; filename="${field.filename}"`;
+    }
+    chunks.push(`\n--${boundary}\n${form}\n\n`, field.value);
+  }
+  chunks.push(`\n--${boundary}--`);
+
+  return { boundary, chunks };
+};
