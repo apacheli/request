@@ -34,7 +34,9 @@ export const request = (address: string, options: RequestOptions = {}) => {
         cr.write(chunk);
       }
     }
-    cr.write(options.body);
+    else {
+      cr.write(options.body);
+    }
   }
   if (options.timeout) {
     cr.setTimeout(options.timeout);
